@@ -1,421 +1,220 @@
-# **📘 Lesson Plan: SQL Data Definition (DDL) with DuckDB**
-**In data science, data is the new oil. DDL is how we build the refinery.**
+# 🎓 Lesson 1.3: SQL Basic — DDL — Instructor Guide
 
-* **Module:** 1.3 Data Definition & Management 
-* **Target Audience:** Adult Learners (Basic Python knowledge) 
-* **Methodology:** Flipped Classroom / Code-along / "I do, We do, You do"
-* **Tools:** [DbGate](https://www.dbgate.io/download-community/), [DuckDB](https://duckdb.org/)
+## Session Overview
 
-## **🎯 Learning Objectives (Bloom's Taxonomy)**
+| Item | Detail |
+|------|--------|
+| **Duration** | 3 hours |
+| **Format** | Flipped Classroom + Hands-On SQL in DbGate |
+| **Prerequisites** | Lesson 1.2 (database design concepts); DbGate installed; `unit-1-3.db` downloaded |
+| **Tools** | DuckDB + DbGate |
 
-By the end of this session, learners will be able to:
+### Agenda
 
-1. **Identify** the hierarchical structure of a relational database (Database \> Schema \> Table) to organize data effectively.  
-2. **Apply** `CREATE` statements with strict constraints (Primary/Foreign Keys) to **construct** a relational schema that enforces data integrity.  
-3. **Execute** data pipeline commands (`COPY`) to **import** raw CSV data into structured tables for analysis.
-
-## **⏱️ Agenda & Topic Prioritization**
-
-| Time | Section | Focus | Top 3 Core Topics (Must Cover) | Optional Topics (Mention briefly or Skip) |
-| ----- | ----- | ----- | ----- | ----- |
-| **0:00 \- 0:55** | **1\. The Foundation** | **Identify** | **`CREATE TABLE` & Types:** Defining the physical container for data and choosing the right `VARCHAR` vs `INT`. | DuckDB internal storage (`.wal` files), Sequence objects. |
-| **0:55 \- 1:05** | *Break* |  |  |  |
-| **1:05 \- 2:00** | **2\. The Blueprint** | **Construct** | **Constraints (PK/FK):** The "Rules" of the database. How `PRIMARY KEY` and `FOREIGN KEY` prevent bad data. | Complex `CHECK` constraints (Regex), Composite Keys. |
-| **2:00 \- 2:10** | *Break* |  |  |  |
-| **2:10 \- 3:00** | **3\. The Pipeline** | **Execute** | **Data Import (`COPY`):** Moving external data (CSV) into the database to make it useful. | `DROP` vs `TRUNCATE`, Exporting to JSON. |
-
-
-
-
-
----
-## **Section 1: The Foundation (Structure)**
-
-**Goal:** Move from "What is a database?" to "I have a place to store data."
-
-#### **1.1 The Narrative**
-
-"In Python, you create variables like `my_data = []`. But when you turn off the computer, that data vanishes. To make data specific and permanent, we need a **Database**. Think of it like a physical File Cabinet:
-
-* **The Database:** The Cabinet itself.  
-* **The Schema:** A specific drawer (labeled 'HR' or 'Sales').  
-* **The Table:** A folder inside that drawer.  
-* **The Column:** The specific form fields in that folder (Name, Date, ID). Today, we aren't just coding; we are building the cabinet."
-
-#### **1.2 Concept: Types Matter**
-
-* **INTEGER:** Math-able numbers. (e.g., Age, Count).  
-* **VARCHAR:** Text. (e.g., Name, Email).  
-* **DATE:** Chronological points. (Don't store dates as text\!)
+| Time | Section | Focus |
+|------|---------|-------|
+| 0:00 – 0:55 | Part 1: The Foundation | Database hierarchy; CREATE TABLE; data types; INSERT & ALTER |
+| 0:55 – 1:00 | Break | — |
+| 1:00 – 1:55 | Part 2: The Blueprint | Constraints (PK, FK, NOT NULL, CHECK, DEFAULT) |
+| 1:55 – 2:00 | Break | — |
+| 2:00 – 2:55 | Part 3: The Pipeline | COPY for bulk import; Indexes; Views; Export |
+| 2:55 – 3:00 | Wrap-Up | Key Takeaways & Post-Class Assignment Briefing |
 
 ---
 
-We will be using two modern, lightweight tools:
+## 🏃 Part 1: The Foundation (55 min)
 
-1. **DuckDB:** A fast, "in-process" database engine. Unlike traditional databases (like MySQL), DuckDB doesn't require a complex server setup. It stores everything in a single file on your computer, making it perfect for data science.  
-2. **DbGate:** A user-friendly database manager. It provides a visual interface to see your tables, run queries, and manage your data.
+### 🎯 Learning Objective
+Identify the database hierarchy (Database → Schema → Table → Column → Row) and write `CREATE TABLE` statements with appropriate data types.
 
+### 📖 Theory Recap (10 min)
 
+**Analogy:** A database is a filing cabinet. A schema is a drawer. A table is a folder. Columns are the labelled fields on the form. Rows are the filled-in forms.
 
----
-#### **🟢 Activity 1: The "Profile" Table (Code-along) (20 Mins)**
-   
-1. **Connecting to the Database:**
-  
-  * You can connect to any database using an SQL client or IDE like DbGate, which supports a broad range of popular SQL and NoSQL databases, including MySQL, PostgreSQL, SQL Server, MongoDB, SQLite, Oracle, Redis, CockroachDB, MariaDB, Amazon Redshift, ClickHouse, Cassandra, DuckDB, Firebird, and Firestore, with some premium features for cloud databases like Azure. It acts as a universal manager, allowing you to connect to and work with multiple database types from a single application.
+| Level | SQL Object | Real-World Equivalent |
+|-------|-----------|----------------------|
+| Database | `DATABASE` | The entire filing cabinet |
+| Schema | `SCHEMA` | A drawer (organises related tables) |
+| Table | `TABLE` | A folder of records |
+| Column | Column definition | A labelled field on a form |
+| Row | `INSERT` statement | One filled-in form |
 
-  * For this lesson, we'll use DuckDB, a lightweight, in-process SQL database engine.
+**Common Data Types:**
+| Type | Use for | Example |
+|------|---------|---------|
+| `INTEGER` | Whole numbers | Age, quantity, year |
+| `VARCHAR(n)` | Variable-length text | Name, email (max n chars) |
+| `TEXT` | Long text | Description, notes |
+| `DATE` | Calendar date | Birthday, purchase date |
+| `BOOLEAN` | True/False | Is active, has subscription |
+| `DECIMAL(p,s)` | Precise decimals | Price, tax rate |
 
-  * Open **DbGate**.  
-  
-  * Create a new connection to the DuckDB file provided in this repo.
-     
-```
-   db/unit-1-3.db
-```
+### 🛠️ Hands-On Activity: "Build the Foundation" (35 min)
 
-> If you expand on the `unit-1-3.db`, you should see a few predefined schemas.  
-> * The default schema is `main`.  
-> * Any tables you create without specifying a schema will be in `main`.  
-> * You can also create additional schemas to organize your tables.
+**Code-along in DbGate:**
 
-
-
-2. **Creating a Schema:**
-
-   We start by creating a new schema `lesson` to organise our tables.
-
+1. Create a schema and first table:
 ```sql
 CREATE SCHEMA lesson;
-```
 
-  * alternatively, we can also use the following to create a schema if it does not exist yet
-
-```sql
-CREATE SCHEMA IF NOT EXISTS lesson;
-```
-
-
-3. **Creating your first Table:**
-
-  * We will be creating a table `users` in the `lesson` schema. The table will have the following columns:
-
-- `id` - integer
-- `name` - varchar
-- `email` - varchar
-  
-```sql
-CREATE TABLE lesson.users (  
-  id INTEGER,  
-  name VARCHAR,  
-  email VARCHAR  
+CREATE TABLE lesson.users (
+    id        INTEGER PRIMARY KEY,
+    name      VARCHAR(100),
+    email     VARCHAR(200),
+    joined_at DATE
 );
 ```
 
-> If you just want to create tables in the default (`main`) schema, you can omit the `lesson.` prefix.
-
-
-4. **Basic Data Entry (DML basics for testing DDL):**
-
-  * We can insert data into the table using the `INSERT INTO` statement.
-   
+2. Insert a few rows:
 ```sql
-INSERT INTO lesson.users (id, name, email)  
-VALUES (1, 'John Doe', 'john.doe@gmail.com');
+INSERT INTO lesson.users VALUES (1, 'Alice', 'alice@example.com', '2024-01-15');
+INSERT INTO lesson.users VALUES (2, 'Bob', 'bob@example.com', '2024-02-20');
 ```
 
-  * This will insert a new row / record into the `users` table. You can insert multiple rows at once.
-
+3. Use ALTER TABLE to add a column:
 ```sql
-INSERT INTO lesson.users (id, name, email)
-VALUES (2, 'Jane Doe', 'jane.doe@gmail.com'),
-       (3, 'John Smith', 'john.smith@gmail.com');
+ALTER TABLE lesson.users ADD COLUMN is_active BOOLEAN DEFAULT TRUE;
 ```
 
-> Insert two more rows with contiguously increasing `id` values, random `name`s and `email`s.
+4. Discuss: `TRUNCATE` (empty table, keep structure) vs. `DROP` (delete everything).
 
-5. **Alter Tables**
+**Discussion Questions:**
+- "What happens if you try to insert a second row with the same `id`?"
+- "Why use `VARCHAR(100)` instead of `TEXT` for a name field?"
 
-  * We can alter the tables to add, rename or remove columns.
+### 💬 Q&A & Reflection (10 min)
 
-  * Add column 'start_date' to table users.
-
-```sql
-ALTER TABLE lesson.users ADD COLUMN start_date DATE;
-```
-
-Rename column 'id' to 'uid' in table classes.
-
-```sql
-ALTER TABLE lesson.users RENAME id TO uid;
-```
-
-6. **TRUNCATE (Emptying the table) vs. DROP (Deleting the table):**
-
-
-
-```sql
-ALTER TABLE lesson.users
-DROP COLUMN email;
-```
-
-```sql
-TRUNCATE TABLE lesson.users;
-```
-
-```sql
-DROP TABLE lesson.users;
-```
-> **Tip: "Always run a SELECT before a DROP. Double-check your table name. It’s better to be slow and correct than fast and sorry."**
-
-* **Q\&A:** Addressing connection issues and terminology (Database vs. Schema).  
-* **Reflection:** Why is organizing data into schemas important in a production environment?
+- **Common Misconception:** "`DROP TABLE` and `TRUNCATE TABLE` do the same thing." → `TRUNCATE` removes all rows but keeps the table structure. `DROP` removes the table entirely — it's irreversible.
+- **Business Case:** Every time a user signs up for a SaaS product, an `INSERT` statement like the one you just wrote runs in the background. Database schemas built badly at launch (wrong types, missing constraints) are extremely expensive to fix at scale.
 
 ---
-## **Section 2: The Blueprint - Building Relationships & Constraints**
 
-**Goal:** Translate a diagram (ERD) into code that enforces rules.
+## 🏃 Part 2: The Blueprint — Constraints (55 min)
 
-#### **2.1 The Narrative**
+### 🎯 Learning Objective
+Apply NOT NULL, UNIQUE, CHECK, DEFAULT, Primary Key, and Foreign Key constraints to enforce data integrity.
 
-"In Excel, you can type 'Banana' into a column meant for Prices. Excel doesn't care. Databases *do* care. We are the architects, and we need to install 'Bouncers' at the door. These bouncers are called **Constraints**. If you try to enter a duplicate User ID? **Blocked.** If you try to enter a Class for a Teacher that doesn't exist? **Blocked.**"
+### 📖 Theory Recap (10 min)
 
-#### **2.2 Concept: The Keys**
+**Analogy:** Constraints are bouncers at the door of your database. They check every row trying to enter and reject anything that breaks the rules — before it causes chaos inside.
 
-* **Primary Key (PK):** The Fingerprint. Unique and Not Null.  
-* **Foreign Key (FK):** The Link. It points to a PK in another table.
+| Constraint | What it enforces | What it rejects |
+|-----------|-----------------|----------------|
+| `PRIMARY KEY` | Unique, non-null identity per row | Duplicates and nulls |
+| `FOREIGN KEY` | References a valid PK in another table | Orphaned records |
+| `NOT NULL` | Column must have a value | Empty submissions |
+| `UNIQUE` | No two rows can have the same value | Duplicate emails, usernames |
+| `CHECK` | Value must satisfy a condition | Negative prices, invalid ages |
+| `DEFAULT` | Fallback value if none provided | — |
 
-* **Theory Summary/Recap:**  
-  * Constraints: Primary Keys (Uniqueness), Foreign Keys (Relationships), NOT NULL, CHECK, and DEFAULT.  
-  * Understanding the School System ERD (Students, Teachers, Classes).
+### 🛠️ Code-Along: "The School Database" (35 min)
 
-<details>
-  <summary>Primary Keys, Foreign Keys, NOT NULL, CHECK, and DEFAULT</summary>
-  
-  * `primary key` or `unique` define a column, or set of columns, that are a unique identifier for a row in the table.
-  * `primary key` constraints and unique constraints are identical except that a table can only have one primary key constraint defined, but many unique constraints and a primary key constraint also enforces the keys to not be NULL.
-  * `foreign key` defines a column, or set of columns, that refer to a primary key or unique constraint from another table. The constraint enforces that the key exists in the other table.
-  * `not null` specifies that the column cannot contain any NULL values. By default, all columns in tables are nullable.
-  * `default` specifies a default value for the column when no value is specified.
-  * `check` constraint allows you to specify an arbitrary boolean expression. Any columns that do not satisfy this expression violate the constraint.
-</details>
+Build a school database with proper constraints:
 
-#### **🟢 Activity 2: The "Missing Link" Challenge (25 Mins)**
-
-**Scenario:** The Instructor builds the `teachers` and `classes` tables. The students must independently build the `students` table based on the ERD.
-
-**Part A: Instructor Demo (Code-along)**
- 
-**Creating Tables with Constraints:**  
 ```sql
 CREATE TABLE lesson.teachers (
-  id INTEGER PRIMARY KEY, -- primary key
-  name VARCHAR NOT NULL, -- not null
-  age INTEGER CHECK(age > 18 AND age < 70), -- check
-  address VARCHAR,
-  phone VARCHAR,
-  email VARCHAR CHECK(CONTAINS(email, '@')) -- check
+    id       INTEGER PRIMARY KEY,
+    name     VARCHAR(100) NOT NULL,
+    subject  VARCHAR(50),
+    salary   DECIMAL(10,2) CHECK (salary > 0)
 );
 
 CREATE TABLE lesson.classes (
-  id INTEGER PRIMARY KEY, -- primary key
-  name VARCHAR NOT NULL, -- not null
-  teacher_id INTEGER REFERENCES lesson.teachers(id) -- foreign key
+    id         INTEGER PRIMARY KEY,
+    name       VARCHAR(50) NOT NULL,
+    teacher_id INTEGER REFERENCES lesson.teachers(id),
+    room       VARCHAR(10) DEFAULT 'TBC'
 );
-```
 
-**Part B: Learner Challenge**
-
-Complete the CREATE TABLE statement for the students table based on the ERD (Entity-Relationship Diagram) below.
-
-> In a school system whose classes have students and teachers. Each student belongs to a single class. Each teacher may teach more than one class, but each class only has one teacher.
-
-```dbml
-Table students {
-  id int [pk]
-  name varchar
-  address varchar
-  phone varchar
-  email varchar
-  class_id int
-}
-
-Table teachers {
-  id int [pk]
-  name varchar
-  age int
-  address varchar
-  phone varchar
-  email varchar
-}
-
-Table classes {
-  id int [pk]
-  name varchar
-  teacher_id int
-}
-
-Ref: students.class_id > classes.id // many-to-one
-
-Ref: classes.teacher_id > teachers.id // many-to-one
-```
-
-* **Q\&A:** Troubleshooting foreign key errors and understanding "CHECK" logic.  
-* **Reflection:** How do constraints prevent "bad data" from entering your analysis pipeline?
-
-
----
-## **Section 3: The Pipeline - Data Management & Performance**
-
-**Goal:** Manage data efficiency and bulk loading.
-
-#### **3.1 The Narrative**
-
-"We have empty tables. Typing `INSERT INTO...` one row at a time is fine for 10 rows. It is impossible for 1 million rows. As Data Scientists, you will often receive a 'dump'—a massive CSV file from a client. You need to get that into your SQL environment instantly. We use the **COPY** command. It is the industrial vacuum cleaner of SQL."
-
-#### **3.2 Concept: Views vs. Tables**
-
-* **Table:** Physical storage. Takes up hard drive space.  
-* **View:** A "Saved Search", a virtual query, it runs every time you look at it. Good for simplifying complex joins.
-* **Indexes** Think of a book index for speed. 
-  
-
-<details>
-  <summary>What are Indexes?</summary>
-  
-  * Indexes are used to improve the performance of queries. They are not required but are recommended for tables with many rows. They are used to _retrieve data from the database more quickly than otherwise_. Indexes are created using one or more columns of a database table. The users cannot see the indexes, they are just used to speed up searches/queries.
-</details>
-
-<details>
-  <summary>Tables vs. Views</summary>
-  
-  * Tables and views are both ways to store data. What is the difference between them? A table is a physical copy of the data (materialized), while a view is a virtual copy of the data. A view is a query that is run on the fly when you access the view. A view is not stored in the database, but the query that defines the view is stored in the database.
-</details>
-
-
-
-#### **🟢 Activity 3: The CSV Dump (Real-World Task, Code-along)**
-
-1. **Importing Data:**
-
-  * We can import data from a CSV file into a table.
-
-```sql
-COPY lesson.teachers FROM '<full directory path>' (AUTO_DETECT TRUE);
-```
-
-> **Note:** For data import, use the full directory path to the CSV files, e.g. `/Users/fengfeng/Dev/6m-data-1.3-sql-basic-ddl/data/teachers.csv`
-
-2. **Exercise:**
-
-  * Import data for `classes` and `students` tables. 
-
-
-3. **Updating Data:**
-
-  * We can update the data in the table using the `UPDATE` statement.
-
-  * Let's say `Linda Garcia` changed her email to `linda.g@example.com`, we can update the `email` of the student with id 4 (her id) to `linda.g@example.com`. The `WHERE` clause is used to specify which rows to update.
-
-```sql
-UPDATE lesson.students
-SET email = 'linda.g@example.com'
-WHERE id = 4;
-```
-  > This is DML, we will learn more in next lesson. 
-
-4. **Exporting Data:**
-
-  * Let's export the data from the student table into a CSV file delimited with `|`.       Remember to prepend the full directory path to the CSV file.
-
-```sql
-COPY (SELECT * FROM lesson.students) TO '<full directory path>' WITH (HEADER 1, DELIMITER '|');
-
--- example <full directory path>: /Users/fengfeng/Dev/6m-data-1.3-sql-basic-ddl/data/students_new.csv
-```
-
-  * We can also export the data into a JSON file (you will learn more about JSON in Module 2).
-
-```sql
-COPY (SELECT * FROM lesson.students) TO '<full directory path>';
-
--- example <full directory path>:  /Users/fengfeng/Dev/6m-data-1.3-sql-basic-ddl/data/students.json
-```
-
-5. **Learner Challenge**
-
-  * Repeat the above steps for the `teachers` & `classes` tables.
-
-#### **🟢 Activity 4: Index, Table & View (Code-along)**
-
-6. **Creating Indexes:**
-
-   <details>
-   <summary>Indexes</summary>
-  
-   * Indexes are used to improve the performance of queries. They are not required but are recommended for tables with many rows. They are used to _retrieve data from the database more quickly than otherwise_. Indexes are created using one or more columns of a database table. The users cannot see the indexes, they are just used to speed up searches/queries.
-   </details>
-
-```sql
--- Create a unique index 'teachers_name_idx' on the column name of table teachers.
-
-CREATE UNIQUE INDEX teachers_name_idx ON lesson.teachers(name);
-```
-
-```sql
--- Create index 'students_name_idx' that allows for duplicate values on the column name of table students.
-
-CREATE INDEX students_name_idx ON lesson.students(name);
-```
-
-```sql
--- View indexes for a specific table
-SELECT index_name, sql 
-FROM duckdb_indexes 
-WHERE table_name = 'students';
-```
-
-7. **Tables vs Views:**
-
-   <details>
-   <summary>Tables and Views</summary>
-  
-   * Tables and views are both ways to store data. What is the difference between them? A table is a physical copy of the data (materialized), while a view is a virtual copy of the data. A view is a query that is run on the fly when you access the view. A view is not stored in the database, but the query that defines the view is stored in the database.
-   </details>
-
-  * We will be creating a view `students_view` in the `lesson` schema. The view will have the following columns:
-
-  - `id` - integer
-  - `name` - varchar
-  - `email` - varchar
-
-```sql
-CREATE VIEW lesson.students_view AS
-SELECT id, name, email
-FROM lesson.students;
-```
-
-8. **Learner Challenge**
-
-  * Create a view `teachers_view` with the same columns as `students_view` but for the `teachers` table.
-   
-
-
-* **Q\&A:** When should you *not* use an index? Difference between dropping a table vs. deleting data.  
-* **Reflection:** How does using a View simplify the work for a Data Analyst who only needs specific columns?
-
-
-
----
-
-**Solution:**
-#### **🟢 Activity 2: The "Missing Link" Challenge**
-```dbml
 CREATE TABLE lesson.students (
-    id INTEGER PRIMARY KEY,
-    name VARCHAR,
-    email VARCHAR,
-    class_id INTEGER REFERENCES lesson.classes(id) -- Did they remember this?
+    id       INTEGER PRIMARY KEY,
+    name     VARCHAR(100) NOT NULL,
+    email    VARCHAR(200) UNIQUE,
+    class_id INTEGER REFERENCES lesson.classes(id)
 );
 ```
 
+**Student challenge (15 min):** Complete the `students` table independently using the ERD as reference, then test by inserting valid and invalid rows.
+
+**Discussion Questions:**
+- "What happens if you try to `INSERT` a student with a `class_id` that doesn't exist?"
+- "Why might you use `DEFAULT 'TBC'` for the room field?"
+
+### 💬 Q&A & Reflection (10 min)
+
+- **Common Misconception:** "I can add constraints later with ALTER TABLE." → Yes, but it's harder and riskier if existing data already violates the constraint. Design constraints in from the start.
+- **Business Case:** A European airline discovered that 12% of their passenger records had no email addresses because the field was nullable — causing failed check-in notifications. Adding `NOT NULL` at launch would have prevented this.
+
+---
+
+## 🏃 Part 3: The Pipeline (55 min)
+
+### 🎯 Learning Objective
+Execute `COPY` for bulk data import, create Indexes for performance, and build Views to simplify analyst access.
+
+### 📖 Theory Recap (10 min)
+
+**The COPY command is the industrial vacuum cleaner of SQL** — instead of inserting rows one by one, it inhales an entire CSV file in seconds.
+
+**Indexes:** Like a book's index — instead of reading every page (full table scan), the database jumps directly to the relevant rows. Dramatically speeds up `WHERE` and `JOIN` queries on large tables.
+
+**Views:** A saved query that behaves like a virtual table. The data isn't copied — the view re-runs the query every time you access it. Perfect for giving analysts a simplified, pre-filtered view of complex tables.
+
+| Object | Purpose | Lives in DB? |
+|--------|---------|-------------|
+| Table | Stores actual data | ✅ Yes |
+| View | Saved query, virtual table | ✅ Yes (but no data stored) |
+| Index | Speed lookup structure | ✅ Yes |
+
+### 🛠️ Hands-On Activity: "The Data Pipeline" (35 min)
+
+1. **Bulk import from CSV:**
+```sql
+-- Note: Use the full path to your CSV file
+COPY lesson.users FROM '/full/path/to/users.csv' (HEADER, DELIMITER ',');
+```
+
+2. **Update existing records:**
+```sql
+UPDATE lesson.users SET is_active = FALSE WHERE joined_at < '2023-01-01';
+```
+
+3. **Create an index for faster lookups:**
+```sql
+CREATE INDEX idx_users_email ON lesson.users(email);
+```
+
+4. **Create a view for analysts:**
+```sql
+CREATE VIEW lesson.active_users AS
+SELECT id, name, email FROM lesson.users WHERE is_active = TRUE;
+
+SELECT * FROM lesson.active_users;
+```
+
+5. **Export to CSV:**
+```sql
+COPY lesson.active_users TO '/full/path/to/active_users_export.csv' (HEADER, DELIMITER ',');
+```
+
+**Discussion Questions:**
+- "Why use a View instead of just sharing the SELECT query?"
+- "What happens to a View if you drop the underlying table?"
+
+### 💬 Q&A & Reflection (10 min)
+
+- **Common Misconception:** "Views are faster than queries because they're pre-computed." → Standard views re-run the query every time. Only *materialised views* store the result. Performance depends on the underlying query complexity.
+- **Business Case:** Data teams at companies like LinkedIn create Views to give different departments (HR, Finance, Marketing) access to pre-filtered, permission-appropriate subsets of the same underlying database — without giving them access to raw sensitive data.
+
+---
+
+## 🎯 Wrap-Up (5 min)
+
+### Key Takeaways
+1. **DDL is the skeleton of your database** — `CREATE`, `ALTER`, and `DROP` define the structure that everything else depends on.
+2. **Constraints prevent bad data from entering** — it's always cheaper to reject invalid data at entry than to clean it up later.
+3. **COPY, Indexes, and Views are your production tools** — bulk loading, performance, and access control are what separate a prototype from a real database.
+
+### Next Steps
+- **Post-Class:** Complete the [post-class.md](./post-class.md) challenges — The Tiny Library (schema design) and The Marketing Dump (messy data import) (45–60 min).
+- **Next Lesson:** Lesson 1.4 builds on today's structure by teaching you to *query* data with DML — SELECT, WHERE, GROUP BY, and more.
