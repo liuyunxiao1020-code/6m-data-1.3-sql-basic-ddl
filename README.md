@@ -31,7 +31,7 @@ By the end of this lesson, you will be able to:
 |----------|-------------|-----------|
 | [Pre-Class](./pre-class.md) | DDL concepts, DuckDB intro, DbGate setup | 30–45 min |
 | [Lesson Plan](./lesson.md) | Instructor guide for the 3-hour hands-on session | 3 hours |
-| [Post-Class](./post-class.md) | The Tiny Library & The Marketing Dump — schema design challenges | 45–60 min |
+| [Post-Class](./assignment.md) | The Tiny Library & The Marketing Dump — schema design challenges | 45–60 min |
 | [Reference](./reference.md) | SQL DDL cheat sheet, DuckDB data types reference | As needed |
 
 ---

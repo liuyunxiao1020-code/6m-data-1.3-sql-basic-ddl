@@ -216,5 +216,5 @@ COPY lesson.active_users TO '/full/path/to/active_users_export.csv' (HEADER, DEL
 3. **COPY, Indexes, and Views are your production tools** — bulk loading, performance, and access control are what separate a prototype from a real database.
 
 ### Next Steps
-- **Post-Class:** Complete the [post-class.md](./post-class.md) challenges — The Tiny Library (schema design) and The Marketing Dump (messy data import) (45–60 min).
+- **Post-Class:** Complete the [assignment.md](./assignment.md) challenges — The Tiny Library (schema design) and The Marketing Dump (messy data import) (45–60 min).
 - **Next Lesson:** Lesson 1.4 builds on today's structure by teaching you to *query* data with DML — SELECT, WHERE, GROUP BY, and more.
